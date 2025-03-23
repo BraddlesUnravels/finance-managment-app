@@ -1,0 +1,445 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// ENUMS \\\
+
+enum ObjectiveStatus { // The status of the objective. These options can be updated later but theses are examples.
+    TENTATIVE
+    CONFIRMED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+
+enum PlanStatus {
+    TENTATIVE
+    ACTIVE
+    COMPLETED
+    CANCELLED
+}
+
+enum BudgetType {
+    SPENDING
+    SAVING
+}
+
+enum BudgetStatus {
+    ACTIVE
+    COMPLETED
+    OVERSPENT
+    CANCELLED
+}
+
+enum MilestoneStatus { // The status of the milestone. These options can be updated later but theses are examples.
+    TENTATIVE // Used for planning stage
+    CONFIRMED   // Used when the milestone is confirmed and no longer in planning stage
+    ACHIEVED
+    EXTENDED    // Used when the milestone is extended
+    MISSED      // Used when the milestone is missed
+}
+
+enum EntityType { // Again, these are examples
+    OBJECTIVE
+    MILESTONE
+    TRANSACTION
+    USER
+    BANK_ACCOUNT
+    EXPENSE
+    INCOME
+}
+
+enum AccountType {  // Again, these are examples
+    TRANSACTIONAL
+    SAVINGS
+    INVESTMENT
+    CREDIT
+    LOAN
+    MORTGAGE
+}
+
+enum Accuracy {
+    ACTUAL
+    ESTIMATED
+    PROJECTED
+}
+
+enum Frequency {
+    INDIVIDUAL
+    DAILY
+    WEEKLY
+    FORTNIGHTLY
+    MONTHLY
+    QUARTERLY
+    HALF_YEARLY
+    YEARLY
+}
+
+enum ExpenseCategory { // These are examples. They need personalisation
+    RENT
+    MORTGAGE
+    GROCERIES
+    UTILITIES
+    TRANSPORT
+    INSURANCE
+    MEDICAL
+    ENTERTAINMENT
+    EDUCATION
+    SAVINGS
+    INVESTMENTS
+    DEBT
+    OTHER
+}
+
+enum IncomeCategory { // These are examples. They need personalisation
+    SALARY
+    WAGES
+    DIVIDENDS
+    INTEREST
+    RENT
+    BONUS
+    GIFTS
+    OTHER
+}
+
+enum TransactionType {
+    DEBIT
+    CREDIT
+    TRANSFER
+    UNKNOWN
+}
+
+/// Main Entities \\\
+model User {
+    id                  String          @id @default(uuid(7))
+    firstName           String
+    lastName            String
+    username            String          @unique
+    email               String          @unique
+    password            String
+    salt                String
+    createdAt           DateTime        @default(now())
+    updatedAt           DateTime?       @updatedAt
+}
+
+/*
+    Financial Plan (High-Level)
+    - Overall strategy for managing finances
+    - Contains multiple Budgets, Objectives, and related transactions.
+    - Can be used to track progress toward long-term goals.
+*/
+
+// model FinancialPlan { // Allows users the ability to define high-level financial planning.
+//     id                  String          @id @default(uuid(7))
+//     title               String          @unique
+//     description         String
+//     startDate           DateTime        // The date that the financial plan starts
+//     endDate             DateTime        // The date that the financial plan ends
+//     targetAmount        Float           // The target amount of the plan
+//     currentAmount       Float           @default(0.00)          // The current amount of the plan
+//     status              PlanStatus      @default(TENTATIVE)     // The status of the plan. These options can be updated later but theses are examples.
+//     // Relationships
+//     budgets             Budget[]        @relation("BudgetPlan")         // FinancialPlan->Budget: One to Many
+//     objectives          Objective[]     @relation("ObjectivePlan")      // FinancialPlan->Objective: One to Many
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+// A real world bank account
+model BankAccount {
+    id                  String          @id @default(uuid(7))
+    bankName            String          @db.VarChar(50)    // The name of the bank
+    productName         String          @db.VarChar(50)    // The name of the product. e.g. "Everyday Account", "Savings Account", "Home Loan", "Credit Card"
+    bankCode            String          @db.VarChar(2) // The first 3 digits of the bsb
+    stateCode           String          @db.VarChar(1) // 3rd digit of the bsb
+    branchCode          String          @db.VarChar(3) // Final 3 digits of the bsb
+    accountNumber       String          @unique
+    currentBalance      Decimal         @db.Decimal(10,2) @default(00.00)          // The current balance of the account
+    balanceDate         DateTime        // The date of the balance
+    accNickName         String          @db.VarChar(50)    // A nickname for the account
+    accountHolder       String          @db.VarChar(100)    // The legal name of the account on statements etc.
+    accountType         AccountType     // The type of account. This is an enum.
+    dateOpened          DateTime        // The date that the account was opened
+    isJoint             Boolean         @default(false)     // Is the account a joint account
+
+    // should i list interest rate, yearly fees, perks, etc. as part of the account or as a seperate table of account details?
+    // Relationships
+    balanceHistory      AccountBalance[]    @relation("BalanceHistory")         // BankAccount->AccountBalance: One to Many. This includes history of balances to be used in graphs, prograss tracking, etc.
+    transactions        Transaction[]       @relation("SourceAccount")          // BankAccount->Transaction: One to Many
+    // transactionsTo      Transaction[]       @relation("DestinationAccount")     // BankAccount->Transaction: One to Many
+    relatedExpenses     Expense[]           @relation("AccountExpenses")        // BankAccount->Expense: One to Many
+    relatedIncome       Income[]            @relation("AccountIncome")          // BankAccount->Income: One to Many
+    // virtualAccounts     VirtualAccount[]    @relation("VirtualAccountActualAccount")    // BankAccount->VirtualAccount: One to Many
+    // meta data
+    deleted             Boolean         @default(false)
+    createdAt           DateTime        @default(now())
+    createdBy           String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           String?
+}
+
+// A life objective or goal
+// model Objective {
+//     id                  String          @id @default(uuid(7))
+//     title               String          @unique
+//     subTitle            String?         // Optional subtitle
+//     description         String          // Description of what the objective is.
+//     estimatedDueDate    DateTime        // When the objective is due. All objectives must have at least have an estimated due date.
+//     confirmedDueDate    DateTime?       // When the objective is confirmed to be due. This is optional to begin with, not all objectives are fully thought out when they are created.
+//     priority            Int             @unique     // The priority of the objective. This is a forced sequence of integers. 1 is the highest priority, 2 is the second highest, etc. It is unique so that no 2 objectives can have the same priority. Why, because priorities are important.
+//     status              ObjectiveStatus @default(TENTATIVE)     // The status of the objective. These options can be updated later but theses are examples. Maybe this should be progress instead of status, maybe status shoulde be a column of its own.
+//     isJoint             Boolean         @default(false)     // Is the objective a joint objective
+//     relatedPlan         FinancialPlan   @relation("ObjectivePlan", fields: [planId], references: [id])
+//     planId              String
+//     // Relationships
+//     milestones          Milestone[]     @relation("MilestoneObjective")     // Objective->Milestone: One to Many
+//     relatedIncome       Income[]        @relation("ObjectiveIncome")        // Objective->Income: One to Many
+//     relatedTransactions Transaction[]   @relation("TransactionObjective")   // Objective->Transaction: One to Many. Transactions track money movement (e.g., transferring funds from a checking account to a savings account for the objective).
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String      
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+
+/// Secondary Entities \\\///\\\///\\\///\\\\\\///\\\///\\\///\\\\\\///\\\///\\\///\\\\\\///\\\///\\\///\\\\\\///\\\///\\\///\\\\\\///\\\///\\\///\\\
+// model Budget {
+//     id                  String          @id @default(uuid(7))
+//     title               String
+//     description         String?
+//     type                BudgetType      // The type of the budget. This is an enum.
+//     relatedCategories   Category        @relation("BudgetCategory", fields: [categoryId], references: [id])
+//     categoryId          String
+//     startDate           DateTime        // The date that the budget starts
+//     endDate             DateTime?       // The date that the budget ends
+//     allocatedAmount     Float           // The amount allocated to the budget
+//     spentAmount         Float           // The amount spent from the budget
+//     remainingAmount     Float           // The amount remaining in the budget
+//     status              BudgetStatus    @default(ACTIVE)     // The status of the budget. These options can be updated later but theses are examples.
+//     relatedPlan         FinancialPlan   @relation("BudgetPlan", fields: [planId], references: [id])
+//     planId              String
+//     // Relationships
+//     relatedExpenses     Expense[]       @relation("ExpenseBudget")    // Budget->Expense: One to Many
+//     relatedTransactions Transaction[]   @relation("TransactionBudget")    // Budget->Transaction: One to Many
+//     relatedIncome       Income[]        @relation("IncomeBudget")    // Budget->Income: One to Many
+//     virtualAccounts     VirtualAccount[]    @relation("VirtualAccountBudget")    // Budget->VirtualAccount: One to Many
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+// model VirtualAccount { // Used to breakup a single account into multiple virtual accounts for budgeting purposes
+//     id                  String          @id @default(uuid(7))
+//     name                String
+//     description         String?
+//     allocatedAmount     Float           // The amount allocated to the virtual account
+//     remainingAmount     Float           // The amount remaining in the virtual account
+//     status              BudgetStatus    @default(ACTIVE)     // The status of the virtual account. These options can be updated later but theses are examples.
+//     // Relationships
+//     actualAccount       BankAccount     @relation("VirtualAccountActualAccount", fields: [actualAccountId], references: [id])
+//     actualAccountId     String
+//     relatedBudget       Budget?         @relation("VirtualAccountBudget", fields: [budgetId], references: [id])
+//     budgetId            String?
+//     transactions        Transaction[]   @relation("VirtualAccountTransaction")    // VirtualAccount->Transaction: One to Many
+//     expenses            Expense[]       @relation("VirtualAccountExpense")    // VirtualAccount->Expense: One to Many
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+model AccountBalance {
+    id                  String          @id @default(uuid(7))
+    relatedAccount      BankAccount     @relation("BalanceHistory", fields: [accountId], references: [id])
+    accountId           String
+    balance             Decimal         @db.Decimal(10,2) 
+    date                DateTime        // The date of the balance
+    confirmed           Boolean         @default(false)     // Is the balance confirmed as the exact balance of the account at that time it was recorded
+    // meta data
+    deleted             Boolean         @default(false)
+    createdAt           DateTime        @default(now())
+    createdBy           String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           String?
+}
+
+model Expense {
+    id                  String          @id @default(uuid(7))
+    relatedAccount      BankAccount     @relation("AccountExpenses", fields: [accountId], references: [id])
+    accountId           String          // The id of the account that the expense is associated with
+    payeeName           String          // The date of the expense
+    description         String?         // A description of the expense
+    relatedCategory     Category?       @relation("ExpenseCategory", fields: [categoryId], references: [id])
+    categoryId          String?         // The id of the category that the expense is associated with
+    amount              Decimal         @db.Decimal(10,2) // The amount of the expense
+    accuracy            Accuracy        @default(ACTUAL)     // The accuracy of the expense. This is an enum.
+    paymentDate         DateTime        // The date that the expense is paid, or expected to be paid. This is the start date for recurring expenses.
+    recurring           Boolean         @default(false)     // Is the expense recurring
+    // Relationships
+    // recurrence          Recurrence?     @relation("ExpenseRecurrance", fields: [recurrenceId], references: [id])
+    // recurrenceId        String?
+    // relatedMilestone    Milestone?      @relation("MilestoneExpense", fields: [milestoneId], references: [id])
+    // milestoneId         String?         // A Milestone represents a step toward the Objective (e.g., "Save first $1,000"). Expenses are usually costs incurred at specific steps toward achieving an objective.
+    // relatedBudget       Budget?         @relation("ExpenseBudget", fields: [budgetId], references: [id])
+    // budgetId            String?         // The id of the budget that the expense is associated with
+    // virtualAccount      VirtualAccount? @relation("VirtualAccountExpense", fields: [virtualAccountId], references: [id])
+    // virtualAccountId    String?         // The id of the virtual account that the expense is associated with
+    // meta data
+    deleted             Boolean         @default(false)
+    createdAt           DateTime        @default(now())
+    createdBy           String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           DateTime?       @updatedAt
+}
+
+model Income {
+    id                  String          @id @default(uuid(7))
+    relatedAccount      BankAccount     @relation("AccountIncome", fields: [accountId], references: [id])
+    accountId           String          // The id of the account that the income is associated with
+    payerName           String          // The name of the payer of the income
+    description         String?         // A description of the income
+    category            IncomeCategory  // The category of the income. This is an enum.
+    amount              Decimal         @db.Decimal(10,2) // The amount of the income
+    accuracy            Accuracy        @default(ACTUAL)     // The accuracy of the income. This is an enum.
+    paymentDate         DateTime        // The date that the income is paid, or expected to be paid. This is the start date for recurring incomes.
+    recurring           Boolean         @default(false)     // Is the income recurring
+    // Relationships
+    // recurrence          Recurrence?     @relation("IncomeRecurrance", fields: [recurrenceId], references: [id])
+    // recurrenceId        String?
+    // relatedObjective    Objective?      @relation("ObjectiveIncome", fields: [objectiveId], references: [id])
+    // objectiveId         String?         
+    // relatedBudget       Budget?         @relation("IncomeBudget", fields: [budgetId], references: [id])
+    // budgetId            String?         // The id of the budget that the income is associated with
+    // meta data
+    deleted             Boolean         @default(false)
+    createdAt           DateTime        @default(now())
+    createdBy           String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           DateTime?       @updatedAt
+
+}
+
+model Transaction {
+    id                  String          @id @default(uuid(7))
+    relatedAccount      BankAccount?    @relation("SourceAccount", fields: [accountId], references: [id])
+    accountId           String?
+    type                TransactionType?@default(UNKNOWN)    // The type of the transaction. This is an enum.
+    date                DateTime        // The date of the transaction
+    description         String          // A description of the transaction uploaded from the bank data export
+    credit              Decimal         @db.Decimal(10,2)  // The amount credited to the account
+    debit               Decimal         @db.Decimal(10,2)  // The amount debited from the account
+    balance             Decimal         @db.Decimal(10,2)  // The balance of the account after the transaction
+    accuracy            Accuracy        @default(ACTUAL)     // The accuracy of the transaction. This is an enum.
+    // Relationships
+    relatedCategory     Category?       @relation("TransactionCategory", fields: [categoryId], references: [id])
+    categoryId          String?         // The id of the category that the transaction is associated with
+    // destinationAcc      BankAccount?    @relation("DestinationAccount", fields: [destinationAccId], references: [id])
+    // destinationAccId    String?         // The account that the transaction is going to. This is only used for transfers between accounts.
+    // relatedObjective    Objective?      @relation("TransactionObjective", fields: [objectiveId], references: [id])
+    // objectiveId         String?         // The id of the objective that the transaction is associated with
+    // relatedBudget       Budget?         @relation("TransactionBudget", fields: [budgetId], references: [id])
+    // budgetId            String?         // The id of the budget that the transaction is associated with
+    // virtualAccount      VirtualAccount? @relation("VirtualAccountTransaction", fields: [virtualAccountId], references: [id])
+    // virtualAccountId    String?         // The id of the virtual account that the transaction is associated with
+    // meta data
+    deleted             Boolean         @default(false)
+    uploadedAt          DateTime        @default(now())    
+    uploadedBy          String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           String?
+}
+
+// model Recurrence { // Multipule recurrences can be associated with a single income or expense
+//     id                  String          @id @default(uuid(7))
+//     frequency           Frequency       // The frequency of the recurrence. This is an enum.
+//     amount              Float           // The amount of the recurrence
+//     startDate           DateTime        // The date that the recurrence starts
+//     endDate             DateTime?       // The date that the recurrence ends
+//     nextOccurrence      DateTime?       // System calculated date of the next payment
+//     maxOccurences       Int?            // The maximum number of occurences of the recurrence. This is optional.
+//     // Relationships
+//     recurringIncome     Income[]        @relation("IncomeRecurrance")
+//     recurringExpense    Expense[]       @relation("ExpenseRecurrance")
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+// A milestone is a step towards an objective
+// model Milestone {
+//     id                  String          @id @default(uuid(7))
+//     relatedObjective    Objective       @relation("MilestoneObjective", fields: [objectiveId], references: [id])
+//     objectiveId         String
+//     title               String
+//     description         String
+//     dueDate             DateTime
+//     status              MilestoneStatus @default(TENTATIVE)     // The status of the milestone. These options can be updated later but theses are examples.
+//     // Relationships
+//     relatedExpenses     Expense[]       @relation("MilestoneExpense")    // Milestone->Expense: One to Many. Not all expenses contribute to long-term objectives (e.g., buying groceries isn’t linked to a goal). Only milestone-related expenses should be tracked in goal progress.
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime        @default(now())
+//     createdBy           String
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           String?
+// }
+
+
+// model Note {
+//     id                  String          @id @default(uuid(7))
+//     entityId            String          // This could be the id of the objective or the id of a transaction. This is the id of the entity that the note is associated with.
+//     entityType          EntityType      // This is the type of entity that the note is associated with.
+//     content             String
+//     // meta data
+//     deleted             Boolean         @default(false)
+//     createdAt           DateTime?       @default(now())
+//     createdBy           String?
+//     deletedAt           DateTime?       @updatedAt
+//     deletedBy           DateTime?       @updatedAt
+
+//     // Indexes
+//     @@index([entityId])
+//     @@index([entityId, entityType])
+// }
+
+/// Lookups \\\
+model Category {
+    id                  String          @id @default(uuid(7))
+    name                String          @unique // e.g. Rent, Mortgage, Groceries, Utilities, Transport, Insurance, Medication, Entertainment, Education, Savings, Investments, Debt, Other
+    description         String?         // A description of the category
+    // Relationships
+    expenses            Expense[]       @relation("ExpenseCategory")        // Category->Expense: One to Many
+    transactions        Transaction[]   @relation("TransactionCategory")    // Category->Transaction: One to Many
+    //budgets             Budget[]        @relation("BudgetCategory")         // Category->Budget: One to Many
+    // meta data
+    deleted             Boolean         @default(false)
+    createdAt           DateTime        @default(now())
+    createdBy           String
+    deletedAt           DateTime?       @updatedAt
+    deletedBy           String?
+}

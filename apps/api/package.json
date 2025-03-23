@@ -1,0 +1,21 @@
+{
+    "name": "@app/api",
+    "version": "0.0.1",
+    "private": true,
+    "module": "./src/index.ts",
+    "scripts": {
+        "dev": "",
+        "dev-": "ts-node-dev --respawn src/index.ts"
+    },
+    "dependencies": {
+        "@app/data-layer": "^0.0.1",
+        "@bogeychan/elysia-logger": "^0.1.8",
+        "@sinclair/typebox": "^0.34.30",
+        "elysia": "^1.2.25"
+    },
+    "devDependencies": {
+        "@elysiajs/eden": "^1.2.0",
+        "@ngrok/ngrok": "^1.4.1",
+        "ts-node-dev": "^2.0.0"
+    }
+}

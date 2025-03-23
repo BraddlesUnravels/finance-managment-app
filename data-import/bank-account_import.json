@@ -1,0 +1,79 @@
+{
+    "bankAccounts": [
+        {
+            "bankName": "ING",
+            "productName": "Orange Everyday",
+            "bankCode": "92",
+            "stateCode": "3",
+            "branchCode": "100",
+            "accountNumber": "300524922",
+            "currentBalance": 402.63,
+            "balanceDate": "2025-03-12T00:00:00.000Z",
+            "accNickName": "Bills Account",
+            "accountHolder": "Mr Bradley David Peter Laskey",
+            "accountType": "TRANSACTIONAL",
+            "dateOpened": "2019-04-12T00:00:00.000Z",
+            "isJoint": false
+        },
+        {
+            "bankName": "ING",
+            "productName": "Orange Everyday",
+            "bankCode": "92",
+            "stateCode": "3",
+            "branchCode": "100",
+            "accountNumber": "306084214",
+            "currentBalance": 300.57,
+            "balanceDate": "2025-03-12T00:00:00.000Z",
+            "accNickName": "Spendings Account",
+            "accountHolder": "Mr Bradley David Peter Laskey",
+            "accountType": "TRANSACTIONAL",
+            "dateOpened": "2020-10-19T00:00:00.000Z",
+            "isJoint": false
+        },
+        {
+            "bankName": "ING",
+            "productName": "Savings Maximiser",
+            "bankCode": "92",
+            "stateCode": "3",
+            "branchCode": "100",
+            "accountNumber": "808389689",
+            "currentBalance": 888.26,
+            "balanceDate": "2025-03-12T00:00:00.000Z",
+            "accNickName": "the No Touchy account",
+            "accountHolder": "Mr Bradley David Peter Laskey",
+            "accountType": "SAVINGS",
+            "dateOpened": "2021-02-24T00:00:00.000Z",
+            "isJoint": false
+        },
+        {
+            "bankName": "HSBC",
+            "productName": "Everyday Global Account",
+            "bankCode": "34",
+            "stateCode": "2",
+            "branchCode": "252",
+            "accountNumber": "194094090",
+            "currentBalance": 643.76,
+            "balanceDate": "2025-03-12T00:00:00.000Z",
+            "accNickName": "Bills n life stuffs",
+            "accountHolder": "K Fagerli & B Laskey",
+            "accountType": "TRANSACTIONAL",
+            "dateOpened": "2021-10-20T00:00:00.000Z",
+            "isJoint": true
+        },
+        {
+            "bankName": "HSBC",
+            "productName": "HSBC Bonus Savings",
+            "bankCode": "34",
+            "stateCode": "2",
+            "branchCode": "252",
+            "accountNumber": "519996439",
+            "currentBalance": 350.00,
+            "balanceDate": "2025-03-12T00:00:00.000Z",
+            "accNickName": "Future Empire Fund",
+            "accountHolder": "K Fagerli & B Laskey",
+            "accountType": "SAVINGS",
+            "dateOpened": "2025-03-07T00:00:00.000Z",
+            "isJoint": true
+        }
+    ]
+}

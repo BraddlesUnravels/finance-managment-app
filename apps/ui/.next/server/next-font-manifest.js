@@ -1,0 +1,2 @@
+self.__NEXT_FONT_MANIFEST =
+    '{"pages":{},"app":{"/mnt/c/Users/Brad.Laskey/Repositories/Personal_Projects/finance-app/apps/ui/src/app/layout":["static/media/47cbc4e2adbc5db9-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';

@@ -1,0 +1,32 @@
+{
+    "name": "finance-app",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "bun run dev --workspace=@app/ui",
+        "next:lint": "bun run lint --workspace=@app/ui",
+        "tsc:reset": "bunx tsc --build --force",
+        "migrate": "bun run db:migrate --workspace=@app/data-layer",
+        "db:client": "bunx prisma generate --generator client --schema packages/data-layer/prisma/schema.prisma",
+        "db:seed": "bun packages/data-layer/prisma/seed.ts",
+        "clean:mods": "rm -rf node_modules && rm -rf packages/**/node_modules",
+        "clean:mig": "bun run clean:db --workspace=@app/data-layer",
+        "clean:prisma": "rm -rf node_modules/.prisma && rm -rf node_modules/@prisma/client",
+        "format": "prettier --write ."
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@eslint/js": "^9.21.0",
+        "eslint": "^9.21.0",
+        "husky": "^9.1.7",
+        "prettier": "^3.5.2",
+        "typescript": "^5.7.3",
+        "typescript-eslint": "^8.25.0"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.7"
+    }
+}

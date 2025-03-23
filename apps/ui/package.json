@@ -1,0 +1,42 @@
+{
+    "name": "@app/ui",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "dev": "WATCHPACK_POLLING=true next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "format": "prettier --write .",
+        "clean:next": "rm -rf .next"
+    },
+    "dependencies": {
+        "@emotion/cache": "^11.14.0",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@mui/material": "^6.4.7",
+        "@mui/material-nextjs": "^6.4.3",
+        "lodash": "^4.17.21",
+        "next": "^15.2.2",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3.3.0",
+        "@happy-dom/global-registrator": "^17.4.4",
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/jest-dom": "^6.6.3",
+        "@testing-library/react": "^16.2.0",
+        "@types/lodash": "^4.17.16",
+        "@types/node": "^22.13.10",
+        "@types/react": "^19.0.10",
+        "@types/react-dom": "^19.0.4",
+        "eslint": "^9.22.0",
+        "eslint-config-next": "^15.2.2",
+        "eslint-config-prettier": "^10.1.1",
+        "eslint-plugin-prettier": "^5.2.3",
+        "prettier": "^3.5.3",
+        "typescript": "^5.8.2",
+        "webpack-cli": "^6.0.1"
+    }
+}

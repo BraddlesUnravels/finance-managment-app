@@ -1,0 +1,28 @@
+{
+    "name": "@app/data-layer",
+    "version": "0.0.1",
+    "module": "index.ts",
+    "type": "module",
+    "author": "Bradley Laskey",
+    "description": "",
+    "scripts": {
+        "clean:prisma": "rm -rf node_modules/.prisma && rm -rf node_modules/@prisma/client",
+        "clean:db": "find prisma/migrations -mindepth 1 ! -name 'migration_lock.toml' -exec rm -rf {} +",
+        "infra:up": "docker compose up -d",
+        "infra:down": "docker compose down",
+        "db:migrate": "bunx prisma migrate dev --skip-generate",
+        "db:client": "bunx prisma generate --generator client",
+        "db:seed": "ts-node prisma/seed.ts"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.4.0",
+        "dotenv": "^16.4.7"
+    },
+    "devDependencies": {
+        "prisma": "^6.4.1",
+        "@types/node": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    }
+}
